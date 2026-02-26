@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ön Muhasebe Öğrenme ve Hazırlık Aracı</title>
+  <style>
+    :root {
+      --bg: #1a1d23;
+      --bg-secondary: #242830;
+      --text: #e8eaed;
+      --text-muted: #9aa0a6;
+      --accent: #8ab4f8;
+      --accent-dim: #5c8dd6;
+      --success: #81c995;
+      --error: #f28b82;
+      --warn: #fdd663;
+      --border: #3c4043;
+      --level1: #ea4335;
+      --level2: #f9ab00;
+      --level3: #34a853;
+      --level4: #4285f4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 280px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      padding: 1rem 0;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .sidebar h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 0.5rem 1.25rem;
+      margin-top: 1rem;
+    }
+    .sidebar h2:first-child { margin-top: 0; }
+    .nav-item {
+      display: block;
+      padding: 0.5rem 1.25rem;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.95rem;
+      border-left: 3px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); }
+    .nav-item.active {
+      background: rgba(138,180,248,0.1);
+      border-left-color: var(--accent);
+    }
+    .nav-item.level1 { border-left-color: var(--level1); }
+    .nav-item.level2 { border-left-color: var(--level2); }
+    .nav-item.level3 { border-left-color: var(--level3); }
+    .nav-item.level4 { border-left-color: var(--level4); }
+    .nav-item .check { color: var(--success); margin-right: 0.5rem; }
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem 3rem;
+      max-width: 900px;
+    }
+    .content-section { display: none; }
+    .content-section.active { display: block; }
+    h1 {
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+      color: var(--accent);
+    }
+    h2 { font-size: 1.35rem; margin: 1.5rem 0 0.75rem; }
+    h3 { font-size: 1.1rem; margin: 1rem 0 0.5rem; }
+    p { margin-bottom: 0.75rem; color: var(--text); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    th, td { border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }
+    th { background: var(--bg-secondary); color: var(--accent); }
+    .info-box {
+      background: var(--bg-secondary);
+      border-left: 4px solid var(--accent);
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+    .warning-box { border-left-color: var(--warn); }
+    .error-box { border-left-color: var(--error); }
+    .success-box { border-left-color: var(--success); }
+    button {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    button:hover { background: var(--accent-dim); }
+    input, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .simulator {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .simulator h4 { margin-bottom: 1rem; }
+    .form-row { margin-bottom: 0.75rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .form-row label { min-width: 100px; }
+    .scenario-choice {
+      display: block;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .scenario-choice:hover { border-color: var(--accent); }
+    .scenario-choice.correct { border-color: var(--success); background: rgba(129,201,149,0.15); }
+    .scenario-choice.wrong { border-color: var(--error); background: rgba(242,139,130,0.15); }
+    .quiz-question { margin: 1.5rem 0; }
+    .quiz-option { margin: 0.5rem 0; }
+    .progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0.5rem 0 1rem;
+      overflow: hidden;
+    }
+    .progress-fill { height: 100%; background: var(--success); transition: width 0.3s; }
+    .collapse-panel { margin: 1rem 0; }
+    .collapse-head {
+      background: var(--bg-secondary);
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .collapse-body { padding: 1rem; border: 1px solid var(--border); border-top: none; border-radius: 0 0 4px 4px; }
+    .complete-btn { margin-top: 1rem; font-size: 0.85rem; }
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .sidebar { width: 100%; }
+      .main { padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <h2>Seviye 1 – Olmazsa Olmaz</h2>
+    <a class="nav-item level1 active" data-section="borc-alacak" href="#">1. Borç – Alacak Mantığı</a>
+    <a class="nav-item level1" data-section="cari-hesap" href="#">2. Cari Hesap</a>
+    <a class="nav-item level1" data-section="fatura-turleri" href="#">3. Fatura Türleri</a>
+    <a class="nav-item level1" data-section="kdv" href="#">4. KDV Mantığı</a>
+    <h2>Seviye 2 – Operasyonel</h2>
+    <a class="nav-item level2" data-section="stok" href="#">5. Stok Mantığı</a>
+    <a class="nav-item level2" data-section="vade-tahsilat" href="#">6. Vade – Tahsilat</a>
+    <a class="nav-item level2" data-section="kasa-banka" href="#">7. Kasa ve Banka</a>
+    <h2>Seviye 3 – Rapor Okuma</h2>
+    <a class="nav-item level3" data-section="raporlar" href="#">8. Raporlar</a>
+    <h2>Seviye 4 – İş Disiplini</h2>
+    <a class="nav-item level4" data-section="is-disiplini" href="#">9. İş Disiplini</a>
+    <h2>Pratik</h2>
+    <a class="nav-item" data-section="quiz" href="#">Quiz</a>
+    <a class="nav-item" data-section="hatalar" href="#">Sık Yapılan Hatalar</a>
+    <a class="nav-item" data-section="referans" href="#">Hızlı Referans</a>
+    <div style="padding: 1rem 1.25rem; font-size: 0.85rem; color: var(--text-muted);">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <span id="progressText">0/12 tamamlandı</span>
+    </div>
+  </nav>
+
+  <main class="main">
+    <section id="borc-alacak" class="content-section active">
+      <h1>1. Borç – Alacak Mantığı</h1>
+      <p>Muhasebede en kritik kavram. <strong>Borç ≠ Para çıktı</strong>, <strong>Alacak ≠ Para geldi</strong>. Bu hatayı herkes yapar!</p>
+      <div class="error-box info-box">
+        <strong>Yanlış anlama:</strong><br>
+        Borç = Paranın çıkması &nbsp;|&nbsp; Alacak = Paranın gelmesi
+      </div>
+      <div class="success-box info-box">
+        <strong>Doğru anlama (Ön muhasebe):</strong><br>
+        Borç = Benden alacağı olan / Bana borçlu olan<br>
+        Alacak = Benden borcu olan / Benim borçlu olduğum
+      </div>
+      <h3>Senin Tablon</h3>
+      <table>
+        <tr><th>Durum</th><th>Sonuç</th></tr>
+        <tr><td>Mal sattın</td><td>Müşteri sana BORÇLU (senin alacağın var)</td></tr>
+        <tr><td>Mal aldın</td><td>Sen tedarikçiye BORÇLU (onun alacağı var)</td></tr>
+        <tr><td>Tahsilat aldın</td><td>Müşteri borcu azalır</td></tr>
+        <tr><td>Ödeme yaptın</td><td>Tedarikçiye borcun azalır</td></tr>
+      </table>
+      <h3>İnteraktif: Kim Kime Borçlu?</h3>
+      <p id="scenarioText">Senaryoyu seç ve doğru cevabı bul.</p>
+      <div id="scenarioChoices"></div>
+      <button id="nextScenario" style="margin-top:1rem">Sonraki Senaryo</button>
+      <button class="complete-btn" data-section="borc-alacak">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="cari-hesap" class="content-section">
+      <h1>2. Cari Hesap</h1>
+      <p><strong>Cari</strong> = Müşteri veya tedarikçi hesabı. Her kişiyle para ilişkin burada tutulur.</p>
+      <h3>Kavramlar</h3>
+      <ul style="margin-left:1.5rem; margin-bottom:1rem;">
+        <li><strong>Cari kart:</strong> Kişi/firma bilgileri ve bakiye özeti</li>
+        <li><strong>Cari ekstre:</strong> Tüm hareketlerin (fatura, tahsilat, ödeme) listesi</li>
+        <li><strong>Bakiye:</strong> O ana kadar borç-alacak farkı. Borç bakiyesi = Müşteri size borçlu. Alacak bakiyesi = Siz tedarikçiye borçlusunuz.</li>
+      </ul>
+      <div class="simulator">
+        <h4>Cari Hesap Simülatörü</h4>
+        <div class="form-row">
+          <label>İşlem:</label>
+          <select id="cariIslem">
+            <option value="satis">Satış (Müşteriye)</option>
+            <option value="alis">Alış (Tedarikçiden)</option>
+            <option value="tahsilat">Tahsilat (Müşteriden)</option>
+            <option value="odeme">Ödeme (Tedarikçiye)</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Tutar (TL):</label>
+          <input type="number" id="cariTutar" value="1000" min="1">
+        </div>
+        <button id="cariEkle">İşlem Ekle</button>
+        <button id="cariSifirla" style="margin-left:0.5rem; background:var(--bg-secondary); color:var(--text); border:1px solid var(--border)">Sıfırla</button>
+        <h4 style="margin-top:1.5rem">Müşteri (ABC Ltd) Bakiye: <span id="musteriBakiye">0</span> TL</h4>
+        <h4>Tedarikçi (XYZ A.Ş.) Bakiye: <span id="tedarikciBakiye">0</span> TL</h4>
+        <div id="cariEkstre" style="margin-top:1rem; font-size:0.9rem;"></div>
+      </div>
+      <button class="complete-btn" data-section="cari-hesap">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="fatura-turleri" class="content-section">
+      <h1>3. Fatura Türleri</h1>
+      <p>Bunları ezbere bilmelisin:</p>
+      <table>
+        <tr><th>Fatura Türü</th><th>Açıklama</th><th>Stok</th><th>Cari</th></tr>
+        <tr><td>Alış Faturası</td><td>Tedarikçiden mal aldın</td><td>Stok girişi (+)</td><td>Tedarikçiye borcun artar</td></tr>
+        <tr><td>Satış Faturası</td><td>Müşteriye mal sattın</td><td>Stok çıkışı (-)</td><td>Müşteri sana borçlu olur</td></tr>
+        <tr><td>İade Faturası</td><td>Mal geri alındı veya verildi</td><td>Ters işlem (giriş/çıkış)</td><td>Borç-alacak düzeltmesi</td></tr>
+        <tr><td>Fiyat Farkı</td><td>Fiyat düzeltmesi</td><td>İlgiliyse stok maliyet değişir</td><td>Cari bakiye düzeltilir</td></tr>
+      </table>
+      <div class="info-box">
+        <strong>Önemli:</strong> Fatura = hem stok hareketi hem cari hareketi oluşturur. Tek belgede iki kayıt.
+      </div>
+      <h3>Örnek Satış Faturası (Basit)</h3>
+      <table>
+        <tr><th>Ürün</th><th>Miktar</th><th>Birim Fiyat</th><th>Toplam</th></tr>
+        <tr><td>Ürün A</td><td>10 adet</td><td>100 TL</td><td>1.000 TL</td></tr>
+        <tr><td>Ürün B</td><td>5 adet</td><td>200 TL</td><td>1.000 TL</td></tr>
+        <tr><td colspan="3">KDV %20</td><td>400 TL</td></tr>
+        <tr><td colspan="3"><strong>Genel Toplam</strong></td><td>2.400 TL</td></tr>
+      </table>
+      <button class="complete-btn" data-section="fatura-turleri">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="kdv" class="content-section">
+      <h1>4. KDV Mantığı</h1>
+      <p>Ön muhasebeci için temel: %20 KDV (Türkiye'de yaygın oran).</p>
+      <h3>KDV Dahil / Hariç</h3>
+      <ul style="margin-left:1.5rem; margin-bottom:1rem;">
+        <li><strong>KDV Hariç:</strong> Tutar + (Tutar × %20) = KDV dahil toplam</li>
+        <li><strong>KDV Dahil:</strong> Net = Toplam / 1.20 &nbsp;|&nbsp; KDV = Toplam - Net</li>
+      </ul>
+      <div class="simulator">
+        <h4>KDV Hesaplayıcı</h4>
+        <div class="form-row">
+          <label>Hesaplama:</label>
+          <select id="kdvTip">
+            <option value="haric">KDV Hariç → Dahil</option>
+            <option value="dahil">KDV Dahil → Net + KDV</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Tutar (TL):</label>
+          <input type="number" id="kdvTutar" value="1000" min="0" step="0.01">
+        </div>
+        <button id="kdvHesapla">Hesapla</button>
+        <div id="kdvSonuc" style="margin-top:1rem; font-weight:600;"></div>
+      </div>
+      <p><strong>Alışta ödenen KDV:</strong> Tedarikçiye ödediğin KDV (indirilebilir).</p>
+      <p><strong>Satışta alınan KDV:</strong> Müşteriden aldığın KDV (beyan edilecek). Detaylı beyan mali müşavir işi; mantığını bilmen yeterli.</p>
+      <button class="complete-btn" data-section="kdv">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="stok" class="content-section">
+      <h1>5. Stok Mantığı</h1>
+      <p><strong>Stok kartı:</strong> Her ürünün kodu, adı, birimi, miktarı.</p>
+      <p><strong>Birim:</strong> Adet, kg, metre, litre vb.</p>
+      <p><strong>Stok girişi:</strong> Alış, üretim, iade girişi → Miktar artar.</p>
+      <p><strong>Stok çıkışı:</strong> Satış, fire, iade çıkışı → Miktar azalır.</p>
+      <p><strong>Envanter:</strong> Fiziksel sayım ile sistem karşılaştırması.</p>
+      <div class="warning-box info-box">
+        <strong>Hata yaparsan:</strong> Depo eksiye düşer, sistem karışır. Eksi stok genelde hatalı giriş demektir.
+      </div>
+      <div class="simulator">
+        <h4>Stok Simülatörü</h4>
+        <div class="form-row">
+          <label>Ürün:</label>
+          <select id="stokUrun"></select>
+        </div>
+        <div class="form-row">
+          <label>İşlem:</label>
+          <select id="stokIslem">
+            <option value="giris">Stok Girişi</option>
+            <option value="cikis">Stok Çıkışı</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Miktar:</label>
+          <input type="number" id="stokMiktar" value="10" min="1">
+        </div>
+        <button id="stokEkle">İşlem Ekle</button>
+        <button id="stokSifirla" style="margin-left:0.5rem; background:var(--bg-secondary); color:var(--text); border:1px solid var(--border)">Sıfırla</button>
+        <div id="stokUyari" style="color:var(--error); margin-top:0.5rem;"></div>
+        <h4 style="margin-top:1.5rem">Mevcut Stoklar</h4>
+        <div id="stokListesi" style="margin-top:0.5rem;"></div>
+      </div>
+      <button class="complete-btn" data-section="stok">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="vade-tahsilat" class="content-section">
+      <h1>6. Vade – Tahsilat Sistemi</h1>
+      <p><strong>Peşin satış:</strong> Aynı gün para alındı.</p>
+      <p><strong>Vadeli satış:</strong> Para daha sonra alınacak (30, 60, 90 gün vb.).</p>
+      <p><strong>Çek / Senet:</strong> Vadeli ödeme aracı. Vade tarihine kadar beklenir.</p>
+      <p><strong>Banka havalesi:</strong> Para banka hesabına geçtiğinde tahsilat kaydı yapılır.</p>
+      <div class="info-box">
+        <strong>Örnek:</strong> 30 gün vadeli 5.000 TL satış yaptın → Fatura kesildi, cari açıldı. 30 gün sonra tahsilat aldın → Cari kapandı, kasa/banka arttı.
+      </div>
+      <button class="complete-btn" data-section="vade-tahsilat">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="kasa-banka" class="content-section">
+      <h1>7. Kasa ve Banka Mantığı</h1>
+      <p><strong>Kasa fişi:</strong> Elden alınan/verilen nakit kaydı. Giriş fişi (giren), çıkış fişi (çıkan).</p>
+      <p><strong>Banka hareketi:</strong> Havale, EFT, çek girişi. Para banka hesabına girince veya çıkınca kaydedilir.</p>
+      <p><strong>Gün sonu kasa sayımı:</strong> Fiziksel para sayılır, sistemdeki kasa bakiyesi ile karşılaştırılır.</p>
+      <div class="info-box">
+        <strong>Kasa eksi verir mi?</strong> Teoride vermemeli. Eksi = ya sayım hatası ya kayıt hatası. Mutlaka araştırılmalı.
+      </div>
+      <h3>Örnek Günlük Kasa Hareketi</h3>
+      <table>
+        <tr><th>Tarih</th><th>Açıklama</th><th>Giren</th><th>Çıkan</th><th>Bakiye</th></tr>
+        <tr><td>01.01</td><td>Açılış</td><td>500</td><td>-</td><td>500</td></tr>
+        <tr><td>01.01</td><td>Satış tahsilat</td><td>1200</td><td>-</td><td>1700</td></tr>
+        <tr><td>01.01</td><td>Masraf ödemesi</td><td>-</td><td>200</td><td>1500</td></tr>
+      </table>
+      <button class="complete-btn" data-section="kasa-banka">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="raporlar" class="content-section">
+      <h1>8. Rapor Okuma</h1>
+      <p>Program kullanmak yetmez. Rapor okuyamazsan iş yapamazsın.</p>
+      <h3>Cari Ekstre</h3>
+      <p><strong>Ne zaman:</strong> Müşteri/tedarikçi ile hesap özeti gerektiğinde.</p>
+      <p><strong>Kolonlar:</strong> Tarih, Belg no, Açıklama, Borç, Alacak, Bakiye.</p>
+      <h3>Stok Raporu</h3>
+      <p><strong>Ne zaman:</strong> Depo durumu, envanter hazırlığı.</p>
+      <p><strong>Kolonlar:</strong> Stok kodu, adı, birim, miktar, birim fiyat, toplam değer.</p>
+      <h3>Kasa Raporu</h3>
+      <p><strong>Ne zaman:</strong> Gün sonu kontrol, sayım.</p>
+      <p><strong>Kolonlar:</strong> Tarih, fiş no, açıklama, giren, çıkan, bakiye.</p>
+      <h3>Günlük Satış Listesi</h3>
+      <p><strong>Ne zaman:</strong> Günlük ciroyu görmek için.</p>
+      <h3>Borçlu Müşteri Listesi</h3>
+      <p><strong>Ne zaman:</strong> Tahsilat takibi, vadesi geçen alacaklar.</p>
+      <button class="complete-btn" data-section="raporlar">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="is-disiplini" class="content-section">
+      <h1>9. İş Disiplini</h1>
+      <p>Program bilgisi kadar önemlidir.</p>
+      <ul style="margin-left:1.5rem; margin-bottom:1rem;">
+        <li><strong>Günlük veri girişi yapılmalı</strong> – Arka arkaya birikmesin.</li>
+        <li><strong>Geriye dönük fatura karıştırılmamalı</strong> – Tarih sırasına dikkat.</li>
+        <li><strong>Silmek yerine düzeltme yapılmalı</strong> – İade/düzeltme fişi kullan.</li>
+        <li><strong>Her gün kasa kontrol edilmeli</strong> – Sayım ile eşleşmeli.</li>
+      </ul>
+      <h3>Ön Muhasebeye Geçiş Kontrol Listesi</h3>
+      <div class="info-box">
+        <ul style="margin:0; padding-left:1.25rem;">
+          <li>Cari kartlar hazır mı? (Müşteri/tedarikçi listesi)</li>
+          <li>Stok kartları tanımlı mı?</li>
+          <li>KDV oranları doğru mu?</li>
+          <li>Kasa ve banka hesapları açıldı mı?</li>
+          <li>Fatura serileri tanımlandı mı?</li>
+          <li>Birim fiyatlar güncel mi?</li>
+        </ul>
+      </div>
+      <button class="complete-btn" data-section="is-disiplini">Konuyu Tamamladım</button>
+    </section>
+
+    <section id="quiz" class="content-section">
+      <h1>Quiz</h1>
+      <p>Bilgini test et. Seviye 1–2 konularını kapsar.</p>
+      <div id="quizContainer"></div>
+      <button id="quizBasla" style="margin-bottom:1rem">Quiz Başlat</button>
+      <div id="quizSonuc"></div>
+    </section>
+
+    <section id="hatalar" class="content-section">
+      <h1>Sık Yapılan Hatalar</h1>
+      <ul style="margin-left:1.5rem;">
+        <li><strong>Borç-alacak karıştırma:</strong> "Borç = para çıktı" sanmak. Doğrusu: Borç = alacaklı taraf (sana borçlu).</li>
+        <li><strong>Eksi stok:</strong> Stok çıkışı girişten fazla yapmak. Kontrol et, iade/düzeltme yap.</li>
+        <li><strong>Vade atlama:</strong> Vadeli satışta tahsilat kaydını unutmak. Çek/senet takibi yap.</li>
+        <li><strong>Geriye tarih:</strong> Eski tarihli fatura girmek veri karmaşası yaratır.</li>
+        <li><strong>Kayıt silmek:</strong> Silmek yerine mahsup/düzeltme fişi kullan.</li>
+      </ul>
+    </section>
+
+    <section id="referans" class="content-section">
+      <h1>Hızlı Referans</h1>
+      <div class="collapse-panel">
+        <div class="collapse-head" onclick="toggleCollapse(this)">Borç-Alacak Özeti <span>▼</span></div>
+        <div class="collapse-body" style="display:none">
+          Mal sattın → Müşteri borçlu | Mal aldın → Sen borçlusun | Tahsilat → Borç azalır | Ödeme → Borç azalır
+        </div>
+      </div>
+      <div class="collapse-panel">
+        <div class="collapse-head" onclick="toggleCollapse(this)">KDV Formülleri <span>▼</span></div>
+        <div class="collapse-body" style="display:none">
+          KDV Hariç → Dahil: Tutar × 1.20 | KDV Dahil → Net: Toplam / 1.20 | KDV: Toplam - Net
+        </div>
+      </div>
+      <div class="collapse-panel">
+        <div class="collapse-head" onclick="toggleCollapse(this)">Fatura → Stok + Cari <span>▼</span></div>
+        <div class="collapse-body" style="display:none">
+          Her fatura hem stok hareketi hem cari hareket oluşturur. İkisi birlikte işlenir.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEYS = { progress: 'onMuhasebe_progress', cari: 'onMuhasebe_cari', stok: 'onMuhasebe_stok' };
+    const SECTIONS = ['borc-alacak','cari-hesap','fatura-turleri','kdv','stok','vade-tahsilat','kasa-banka','raporlar','is-disiplini'];
+
+    function loadProgress() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.progress) || '{}'); } catch { return {}; }
+    }
+    function saveProgress(p) { localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(p)); }
+    function updateProgressUI() {
+      const p = loadProgress();
+      const done = SECTIONS.filter(s => p[s]).length;
+      const total = SECTIONS.length;
+      document.getElementById('progressFill').style.width = (done/total*100) + '%';
+      document.getElementById('progressText').textContent = done + '/' + total + ' tamamlandı';
+      document.querySelectorAll('.nav-item[data-section]').forEach(el => {
+        const section = el.dataset.section;
+        let span = el.querySelector('.check');
+        if (!span) { el.insertAdjacentHTML('afterbegin','<span class="check"></span>'); span = el.querySelector('.check'); }
+        if (span) span.textContent = p[section] ? '✓ ' : '';
+      });
+    }
+
+    document.querySelectorAll('.nav-item[data-section]').forEach(el => {
+      el.addEventListener('click', e => {
+        e.preventDefault();
+        const s = el.dataset.section;
+        document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const sec = document.getElementById(s);
+        if (sec) sec.classList.add('active');
+        el.classList.add('active');
+      });
+    });
+
+    document.querySelectorAll('.complete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const s = btn.dataset.section;
+        const p = loadProgress();
+        p[s] = true;
+        saveProgress(p);
+        updateProgressUI();
+      });
+    });
+
+    function toggleCollapse(el) {
+      const body = el.nextElementSibling;
+      body.style.display = body.style.display === 'none' ? 'block' : 'none';
+      el.querySelector('span').textContent = body.style.display === 'none' ? '▼' : '▲';
+    }
+
+    const scenarios = [
+      { q: 'Müşteriye 2.000 TL mal sattın. Kim kime borçlu?', opts: ['Müşteri sana borçlu', 'Sen müşteriye borçlusun', 'Kimse kimseye borçlu değil'], correct: 0 },
+      { q: 'Tedarikçiden 5.000 TL mal aldın. Kim kime borçlu?', opts: ['Tedarikçi sana borçlu', 'Sen tedarikçiye borçlusun', 'Eşit, borç yok'], correct: 1 },
+      { q: 'Müşteriden 2.000 TL tahsilat aldın. Sonuç?', opts: ['Müşteri borcu artar', 'Müşteri borcu azalır', 'Cari değişmez'], correct: 1 },
+      { q: 'Tedarikçiye 3.000 TL ödeme yaptın. Sonuç?', opts: ['Tedarikçiye borcun artar', 'Tedarikçiye borcun azalır', 'Sadece kasa azalır, cari değişmez'], correct: 1 },
+      { q: 'Peşin 1.000 TL satış yaptın. Müşteri hemen ödedi. Cari bakiye ne olur?', opts: ['Müşteri borçlu kalır', 'Sıfırlanır (borç-alacak eşit)', 'Sen borçlu kalırsın'], correct: 1 }
+    ];
+    let scenarioIdx = 0;
+    function renderScenario() {
+      const s = scenarios[scenarioIdx];
+      document.getElementById('scenarioText').textContent = s.q;
+      const div = document.getElementById('scenarioChoices');
+      div.innerHTML = s.opts.map((o, i) => `<div class="scenario-choice" data-idx="${i}">${o}</div>`).join('');
+      div.querySelectorAll('.scenario-choice').forEach(el => {
+        el.addEventListener('click', () => {
+          const idx = parseInt(el.dataset.idx);
+          div.querySelectorAll('.scenario-choice').forEach(c => { c.classList.remove('correct','wrong'); });
+          el.classList.add(idx === s.correct ? 'correct' : 'wrong');
+        });
+      });
+    }
+    document.getElementById('nextScenario').addEventListener('click', () => {
+      scenarioIdx = (scenarioIdx + 1) % scenarios.length;
+      renderScenario();
+    });
+    renderScenario();
+
+    let cariData = { musteri: 0, tedarikci: 0, hareketler: [] };
+    try { cariData = JSON.parse(localStorage.getItem(STORAGE_KEYS.cari) || 'null') || cariData; } catch {}
+    function saveCari() { localStorage.setItem(STORAGE_KEYS.cari, JSON.stringify(cariData)); }
+    function renderCari() {
+      document.getElementById('musteriBakiye').textContent = cariData.musteri;
+      document.getElementById('tedarikciBakiye').textContent = cariData.tedarikci;
+      let html = '<table><tr><th>Tarih</th><th>Açıklama</th><th>Müşteri Bakiye</th><th>Tedarikçi Bakiye</th></tr>';
+      cariData.hareketler.slice(-15).reverse().forEach(h => {
+        html += `<tr><td>${h.tarih}</td><td>${h.aciklama}</td><td>${h.musteri} TL</td><td>${h.tedarikci} TL</td></tr>`;
+      });
+      html += '</table>';
+      document.getElementById('cariEkstre').innerHTML = cariData.hareketler.length ? html : 'Henüz hareket yok.';
+    }
+    document.getElementById('cariSifirla').addEventListener('click', () => {
+      cariData = { musteri: 0, tedarikci: 0, hareketler: [] };
+      saveCari();
+      renderCari();
+    });
+    document.getElementById('cariEkle').addEventListener('click', () => {
+      const islem = document.getElementById('cariIslem').value;
+      const tutar = parseFloat(document.getElementById('cariTutar').value) || 0;
+      const tarih = new Date().toLocaleDateString('tr-TR');
+      let aciklama = '', dm = 0, dt = 0;
+      if (islem === 'satis') { aciklama = 'Satış'; cariData.musteri += tutar; dm = tutar; }
+      else if (islem === 'alis') { aciklama = 'Alış'; cariData.tedarikci += tutar; dt = tutar; }
+      else if (islem === 'tahsilat') { aciklama = 'Tahsilat'; cariData.musteri -= tutar; dm = -tutar; }
+      else if (islem === 'odeme') { aciklama = 'Ödeme'; cariData.tedarikci -= tutar; dt = -tutar; }
+      cariData.hareketler.push({ tarih, aciklama, musteri: cariData.musteri, tedarikci: cariData.tedarikci });
+      saveCari();
+      renderCari();
+    });
+    renderCari();
+
+    document.getElementById('kdvHesapla').addEventListener('click', () => {
+      const tip = document.getElementById('kdvTip').value;
+      const tutar = parseFloat(document.getElementById('kdvTutar').value) || 0;
+      let txt = '';
+      if (tip === 'haric') {
+        const dahil = tutar * 1.2;
+        txt = `KDV Hariç: ${tutar} TL → KDV Dahil: ${dahil.toFixed(2)} TL (KDV: ${(dahil-tutar).toFixed(2)} TL)`;
+      } else {
+        const net = tutar / 1.2;
+        const kdv = tutar - net;
+        txt = `KDV Dahil: ${tutar} TL → Net: ${net.toFixed(2)} TL, KDV: ${kdv.toFixed(2)} TL`;
+      }
+      document.getElementById('kdvSonuc').textContent = txt;
+    });
+
+    const stokUrunler = [
+      { id: 'A', ad: 'Ürün A', birim: 'adet', miktar: 0 },
+      { id: 'B', ad: 'Ürün B', birim: 'adet', miktar: 0 },
+      { id: 'C', ad: 'Ürün C', birim: 'kg', miktar: 0 }
+    ];
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.stok));
+      if (saved) stokUrunler.forEach((u,i) => { u.miktar = saved[i] !== undefined ? saved[i] : u.miktar; });
+    } catch {}
+    function saveStok() { localStorage.setItem(STORAGE_KEYS.stok, JSON.stringify(stokUrunler.map(u=>u.miktar))); }
+    function renderStok() {
+      const sel = document.getElementById('stokUrun');
+      sel.innerHTML = stokUrunler.map((u,i) => `<option value="${i}">${u.ad}</option>`).join('');
+      document.getElementById('stokListesi').innerHTML = stokUrunler.map(u =>
+        `<div>${u.ad}: ${u.miktar} ${u.birim}${u.miktar < 0 ? ' ⚠ Eksi stok!' : ''}</div>`
+      ).join('');
+      const uy = document.getElementById('stokUyari');
+      if (uy) uy.textContent = stokUrunler.some(x => x.miktar < 0) ? 'Uyarı: Eksi stok! Bu genelde hatalı giriş demektir.' : '';
+    }
+    document.getElementById('stokSifirla').addEventListener('click', () => {
+      stokUrunler.forEach(u => u.miktar = 0);
+      saveStok();
+      renderStok();
+      document.getElementById('stokUyari').textContent = '';
+    });
+    document.getElementById('stokEkle').addEventListener('click', () => {
+      const idx = parseInt(document.getElementById('stokUrun').value);
+      const islem = document.getElementById('stokIslem').value;
+      const miktar = parseInt(document.getElementById('stokMiktar').value) || 0;
+      const u = stokUrunler[idx];
+      if (islem === 'giris') u.miktar += miktar;
+      else { u.miktar -= miktar; }
+      const uy = document.getElementById('stokUyari');
+      uy.textContent = stokUrunler.some(x => x.miktar < 0) ? 'Uyarı: Eksi stok! Bu genelde hatalı giriş demektir.' : '';
+      saveStok();
+      renderStok();
+    });
+    renderStok();
+
+    const quizSorular = [
+      { q: 'Mal sattığında müşteri sana borçlu mu alacaklı mı olur?', opts: ['Borçlu', 'Alacaklı', 'İkisi de değil'], c: 0 },
+      { q: 'KDV dahil 1.200 TL tutarın net bedeli kaç TL?', opts: ['1.000', '1.200', '960'], c: 0 },
+      { q: 'Stok çıkışı yapınca depo miktarı ne olur?', opts: ['Artar', 'Azalır', 'Değişmez'], c: 1 },
+      { q: 'Tahsilat aldığında müşteri bakiyesi nasıl değişir?', opts: ['Artar', 'Azalır', 'Değişmez'], c: 1 },
+      { q: 'Fatura sadece stok hareketi mi oluşturur?', opts: ['Evet', 'Hayır, hem stok hem cari', 'Sadece cari'], c: 1 },
+      { q: 'Peşin satışta para ne zaman alınır?', opts: ['Vade sonunda', 'Aynı gün', 'Çekle'], c: 1 },
+      { q: 'Kasa eksi vermesi normal midir?', opts: ['Evet', 'Hayır, araştırılmalı', 'Bazen'], c: 1 },
+      { q: 'Geriye dönük fatura girmek önerilir mi?', opts: ['Evet', 'Hayır, karışıklık yaratır', 'Fark etmez'], c: 1 },
+      { q: 'Kayıt hatasında ne yapılmalı?', opts: ['Sil', 'Düzeltme fişi / mahsup', 'Bırak'], c: 1 }
+    ];
+    function runQuiz() {
+      let score = 0;
+      const container = document.getElementById('quizContainer');
+      const sonuc = document.getElementById('quizSonuc');
+      container.innerHTML = '';
+      quizSorular.forEach((s, i) => {
+        const div = document.createElement('div');
+        div.className = 'quiz-question';
+        div.innerHTML = `<p><strong>${i+1}. ${s.q}</strong></p>` + s.opts.map((o,j) =>
+          `<label class="quiz-option"><input type="radio" name="q${i}" value="${j}"> ${o}</label>`
+        ).join('');
+        container.appendChild(div);
+      });
+      const btn = document.createElement('button');
+      btn.textContent = 'Sonuçları Gör';
+      btn.onclick = () => {
+        quizSorular.forEach((s, i) => {
+          const sel = document.querySelector(`input[name="q${i}"]:checked`);
+          if (sel && parseInt(sel.value) === s.c) score++;
+        });
+        sonuc.innerHTML = `<strong>Sonuç: ${score}/${quizSorular.length} doğru.</strong>`;
+      };
+      container.appendChild(btn);
+      sonuc.innerHTML = '';
+    }
+    document.getElementById('quizBasla').addEventListener('click', runQuiz);
+
+    updateProgressUI();
+  </script>
+</body>
+</html>
